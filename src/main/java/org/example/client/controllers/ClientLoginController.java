@@ -1,43 +1,41 @@
    package org.example.client.controllers;
 
    import javafx.fxml.FXML;
+   import javafx.fxml.FXMLLoader;
    import javafx.scene.control.Alert;
-   import javafx.scene.control.PasswordField;
    import javafx.scene.control.TextField;
    import javafx.stage.Stage;
    import org.example.client.ClientStart;
+
+   import java.util.UUID;
 
    public class ClientLoginController {
 
        @FXML
        private TextField usernameField;
-       @FXML
-       private PasswordField passwordField;
 
        @FXML
        private void handleLogin() {
-           String username = usernameField.getText();
-           String password = passwordField.getText();
-
            try {
-               boolean loggedIn = ClientStart.roomService.login(username, password);
-
-               if (loggedIn) {
-                   // Gdy logowanie się uda, przejdź do listy pokoi
-                   Stage stage = (Stage) usernameField.getScene().getWindow();
-                   FXMLLoader fxmlLoader = new FXMLLoader(ClientStart.class.getResource("roomListView.fxml"));
-                   stage.getScene().setRoot(fxmlLoader.load());
-               } else {
-                   showError("Invalid username or password.");
+               if(usernameField.getLength()<3)
+               {
+                   Alert alert = new Alert(Alert.AlertType.ERROR);
+                   alert.setTitle("Error");
+                   alert.setHeaderText(null);
+                   alert.setContentText("Username must be at least 3 characters long.");
+                   alert.showAndWait();
+                   return;
                }
-           } catch (Exception e) {
-               showError("Could not connect to server.");
-           }
-       }
+               String username = usernameField.getText();
+               ClientStart.setUserToken(UUID.randomUUID()+"@"+username);
+               ClientStart.setUserName(username);
+               Stage stage = (Stage) usernameField.getScene().getWindow();
+               FXMLLoader fxmlLoader = new FXMLLoader(ClientStart.class.getResource("RoomListView.fxml"));
+               stage.getScene().setRoot(fxmlLoader.load());
 
-       private void showError(String message) {
-           Alert alert = new Alert(Alert.AlertType.ERROR);
-           alert.setContentText(message);
-           alert.show();
+           } catch (Exception e) {
+               System.out.println(e.getMessage());
+
+           }
        }
    }
