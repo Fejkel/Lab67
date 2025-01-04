@@ -1,35 +1,37 @@
 package org.example.client.controllers;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import org.example.client.ClientStart;
-
-import java.io.IOException;
-import java.rmi.RemoteException;
+import org.example.client.SceneController;
+import org.example.client.ServerService;
 
 
 public class GameController {
     @FXML
-    Label whosturn;
+    private Label whosturn;
+    @FXML
+    private GridPane gridPane;
 
     @FXML
-    public void initialize() throws RemoteException, InterruptedException {
-
+    public void initialize() {
+        ServerService serverService = ClientStart.getServerService();
+        serverService.waitForAnotherPlayer(ClientStart.userToken, ClientStart.roomToken,whosturn,gridPane);
     }
 
-    public void handleLeave(ActionEvent event) {
+    @FXML
+    public void handleLeave() {
         try {
-            ClientStart.roomService.leaveRoom(ClientStart.userToken,ClientStart.roomToken);
+            ClientStart.getServerService().leaveRoom(ClientStart.userToken, ClientStart.roomToken);
             ClientStart.setRoomToken(null);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            Stage stage = (Stage) whosturn.getScene().getWindow();
+            SceneController sceneController = new SceneController(stage);
+            sceneController.switchTo("RoomListView.fxml");
+
+        } catch (Exception e) {
+            System.out.println("Leave room error: " + e.getMessage());
         }
     }
 

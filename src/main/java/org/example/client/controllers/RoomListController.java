@@ -1,89 +1,113 @@
-   package org.example.client.controllers;
+package org.example.client.controllers;
 
-   import javafx.fxml.FXML;
-   import javafx.fxml.FXMLLoader;
-   import javafx.scene.Node;
-   import javafx.scene.Scene;
-   import javafx.scene.control.Alert;
-   import javafx.scene.layout.VBox;
-   import javafx.scene.control.Label;
-   import javafx.scene.control.TextField;
-   import javafx.stage.Stage;
-   import org.example.client.ClientStart;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import org.example.client.ClientStart;
+import org.example.client.SceneController;
+import org.example.client.ServerService;
 
+import java.rmi.RemoteException;
+import java.util.ArrayList;
 
-   import java.io.IOException;
-   import java.rmi.RemoteException;
-   import java.util.ArrayList;
+public class RoomListController {
 
-   public class RoomListController {
-   
-       @FXML
-       private VBox roomContainer;
-       @FXML
-       private Label usernameLabel;
-       @FXML
-       private TextField roomName;
+    @FXML
+    private VBox roomContainer;
+    @FXML
+    private Label usernameLabel;
+    @FXML
+    private TextField roomName;
 
-       @FXML
-       public void initialize() {
-           loadUsername();
-           loadRooms();
-       }
-       @FXML
-       private void loadRooms(){
-           roomContainer.getChildren().clear();
-           try {
-               ArrayList<String> RoomsToken = ClientStart.roomService.getRooms();
-               RoomsToken.forEach(token -> {
-                   String roomName = token.split("/")[1];
-                   javafx.scene.control.Button button;
+    private ServerService serverService;
 
-                   try {
-                       button = new javafx.scene.control.Button(roomName + "  " + ClientStart.roomService.getPlayerNumber(token) + "/2");
-                   } catch (RemoteException e) {
-                       throw new RuntimeException(e);
-                   }
+    @FXML
+    public void initialize() {
+        this.serverService = ClientStart.getServerService();
+        loadRooms();
+        loadUsername();
+    }
+    @FXML
+    private void loadRooms() {
+        roomContainer.getChildren().clear();
+        var task = serverService.loadRoomsTask();
 
-                   button.setOnAction(event -> {
-                       try {
-                           ClientStart.roomService.joinRoom(ClientStart.userToken, token);
-                           ClientStart.setRoomToken(token);
+        task.setOnSucceeded(event -> {
+            ArrayList<String> rooms = task.getValue();
+            rooms.forEach(token -> {
+                Button button = new Button(getRoomDisplayText(token));
+                button.setOnAction(e -> handleJoinRoom(token));
+                roomContainer.getChildren().add(button);
+            });
+        });
 
-                           FXMLLoader fxmlLoader = new FXMLLoader(ClientStart.class.getResource("GameView.fxml"));
-                           Scene scene = new Scene(fxmlLoader.load());
-                           Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                           stage.setScene(scene);
-                           stage.show();
+        task.setOnFailed(event -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Failed to load rooms.");
+            alert.show();
+        });
 
-                       } catch (IOException ex) {
-                           throw new RuntimeException(ex);
-                       }
-                   });
-                   roomContainer.getChildren().add(button);
-               });
-           } catch (RemoteException e) {
-               throw new RuntimeException(e);
-           }
-       }
+        new Thread(task).start();
+    }
 
-       private void loadUsername()
-       {
-           usernameLabel.setText(ClientStart.userName);
-       }
+    private String getRoomDisplayText(String token) {
+        try {
+            return token.split("/")[1] + " " + serverService.getPlayerNumber(token) + "/2";
+        } catch (RemoteException e) {
+            return "Error";
+        }
+    }
+    @FXML
+    private void handleJoinRoom(String token) {
+        try {
+            if(serverService.getPlayerNumber(token) == 2)
+            {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Room is full.");
+                alert.show();
+                return;
+            }
+            serverService.joinRoom(ClientStart.userToken, token);
+            ClientStart.setRoomToken(token);
 
-       @FXML
-       private void handleCreateRoom() {
-           try {
-               ClientStart.roomService.createRoom(roomName.getText());
-               loadRooms();
-               roomName.clear();
-           } catch (Exception e) {
-               Alert alert = new Alert(Alert.AlertType.ERROR);
-               alert.setContentText("Could not create room.");
-               alert.show();
-               System.out.println(e.getMessage());
-           }
-       }
+            Stage stage = (Stage) usernameLabel.getScene().getWindow();
+            SceneController sceneController = new SceneController(stage);
+            sceneController.switchTo("GameView.fxml");
 
-   }
+        } catch (Exception e) {
+            System.out.println("Join room error: " + e.getMessage());
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Failed to join room.");
+            alert.show();
+        }
+    }
+
+    @FXML
+    private void handleCreateRoom() {
+        try {
+            if (roomName.getLength() < 3) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Room name must be at least 3 characters long.");
+                alert.showAndWait();
+            }else {
+                System.out.println("Creating room...");
+                serverService.createRoom(roomName.getText());
+                loadRooms();
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Could not create room.");
+            alert.show();
+        }
+    }
+    private void loadUsername()
+    {
+        usernameLabel.setText("Username: "+ClientStart.userName);
+    }
+}

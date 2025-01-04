@@ -3,6 +3,7 @@ package org.example.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class RoomService extends UnicastRemoteObject implements RoomServiceInterface {
@@ -13,49 +14,48 @@ public class RoomService extends UnicastRemoteObject implements RoomServiceInter
     }
 
     @Override
-    public String createRoom(String roomName) throws RemoteException {
-        String roomToken = UUID.randomUUID() + "/" + roomName;
-        Room room = new Room(roomToken);
-        if(Rooms.contains(room))
-        {
-            return "Room already exists";
-        }else {
-            Rooms.add(room);
-            Logger.log("Created new room: "+roomToken);
-            System.out.println("Created new room: "+roomToken);
-            return roomToken;
-        }
+    public void createRoom(String roomName) throws RemoteException {
+            String roomToken = UUID.randomUUID() + "/" + roomName;
+            Room room = new Room(roomToken);
+            if (Rooms.contains(room)) {
+                Logger.log("Room exited "+ roomToken);
+                System.out.println("Room exited "+ roomToken);
+            } else {
+                Rooms.add(room);
+                Logger.log("Created new room: " + roomToken);
+                System.out.println("Created new room: " + roomToken);
+            }
+
     }
 
     @Override
-    public int deleteRoom(String roomToken) throws RemoteException {
+    public void deleteRoom(String roomToken) throws RemoteException {
         for(Room room : Rooms){
             if(room.getToken().equals(roomToken)){
                 Rooms.remove(room);
                 System.out.println("Room "+roomToken+" deleted");
                 Logger.log("Deleted room: "+roomToken);
-                return 1;
             }
         }
         System.out.println("Room "+roomToken+" not found");
-        return 0;
     }
 
     @Override
-    public int joinRoom(String playerToken, String roomToken) throws RemoteException {
+    public void joinRoom(String playerToken, String roomToken) throws RemoteException {
         for(Room room : Rooms){
             if(room.getToken().equals(roomToken)){
-                System.out.println("Player "+playerToken+" joined room "+roomToken);
-                Logger.log("Player "+playerToken+" joined room "+roomToken);
-                return room.joinRoom(playerToken);
+                if(room.getPlayerNumber() < 2) {
+                    System.out.println("Player " + playerToken + " joined room " + roomToken);
+                    Logger.log("Player " + playerToken + " joined room " + roomToken);
+                    room.joinRoom(playerToken);
+                }
             }
         }
         System.out.println("Room "+roomToken+" not found");
-        return 0;
     }
 
     @Override
-    public int leaveRoom(String playerToken, String roomToken) throws RemoteException {
+    public void leaveRoom(String playerToken, String roomToken) throws RemoteException {
         for(Room room : Rooms){
             if(room.getToken().equals(roomToken)){
                 room.leaveRoom(playerToken);
@@ -64,29 +64,26 @@ public class RoomService extends UnicastRemoteObject implements RoomServiceInter
                 if(room.getPlayerNumber() == 0){
                     deleteRoom(roomToken);
                 }
-                return 1;
             }
         }
         System.out.println("Room "+roomToken+" not found");
-        return 0;
+
     }
 
     @Override
-    public int resetRoom(String playerToken, String roomToken) throws RemoteException {
-        for(Room room : Rooms){
-            if(room.getToken().equals(roomToken)){
+    public void resetRoom(String playerToken, String roomToken) throws RemoteException {
+        for (Room room : Rooms) {
+            if (room.getToken().equals(roomToken)) {
                 room.resetRoom(playerToken);
-                Logger.log("Room reseted: "+roomToken);
-                return 1;
             }
         }
-        return 0;
     }
 
     @Override
     public boolean isYourTurn(String playerToken, String roomToken) throws RemoteException {
         for(Room room : Rooms){
             if(room.getToken().equals(roomToken)){
+                System.out.println("User turn "+ room.isYourTurn(playerToken) + ", roomToken: " + roomToken);
                 return room.isYourTurn(playerToken);
             }
         }
@@ -94,23 +91,23 @@ public class RoomService extends UnicastRemoteObject implements RoomServiceInter
     }
 
     @Override
-    public int makeMove(String playerToken, String roomToken, int move) throws RemoteException {
+    public synchronized void makeMove(String playerToken, String roomToken, int move) throws RemoteException {
+        System.out.println("Received move: position=" + move + ", symbol=" + playerToken);
         if(isYourTurn(playerToken,roomToken)){
             for(Room room : Rooms){
                 if(room.getToken().equals(roomToken)){
                     room.makeMove(playerToken,move);
-                    return 1;
+                    System.out.println("Updated board: " + Arrays.toString(room.getBoard()));
                 }
             }
         }
-        return 0;
     }
 
     @Override
-    public String checkWinner(String roomToken) throws RemoteException {
+    public synchronized String checkWinner(String roomToken) throws RemoteException {
         for(Room room : Rooms){
             if(room.getToken().equals(roomToken)){
-        
+
                 if(room.checkWinners() != null){
                     Logger.log("Room "+roomToken+" ended with winner: "+room.checkWinners());
                     return room.checkWinners();
@@ -151,4 +148,13 @@ public class RoomService extends UnicastRemoteObject implements RoomServiceInter
         return 0;
     }
 
+    @Override
+    public String[] getBoard(String roomToken) {
+        for(Room room : Rooms){
+            if(room.getToken().equals(roomToken)){
+                return room.getBoard();
+            }
+        }
+        return null;
+    }
 }

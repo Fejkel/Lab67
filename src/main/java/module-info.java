@@ -5,7 +5,7 @@ module org.example.java {
 
     exports org.example.client;
     opens org.example.client to javafx.fxml;
-    opens org.example.client.controllers to javafx.fxml; // Otwiera pakiet controllers dla FXML
+    opens org.example.client.controllers to javafx.fxml;
 
     exports org.example.server to java.rmi;
 }
