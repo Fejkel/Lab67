@@ -54,7 +54,6 @@ public class Main {
                     port = Integer.parseInt(args[0]);
                     System.out.println("Port set to: " + port);
                     Logger.log("Port set to: " + port);
-                    return;
                 }catch (NumberFormatException e){
                     System.out.println("Port must be a number");
                 }
