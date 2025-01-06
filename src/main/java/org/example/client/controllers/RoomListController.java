@@ -89,7 +89,6 @@ public class RoomListController {
             }
 
         } catch (Exception e) {
-            System.out.println("Join room error: " + e.getMessage());
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Failed to join room.");
             alert.show();

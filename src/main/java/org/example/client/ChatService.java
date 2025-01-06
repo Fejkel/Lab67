@@ -40,7 +40,7 @@ public class ChatService {
                 initializeServer();
                 runServerLoop();
             } catch (Exception e) {
-                System.err.println("Błąd serwera czatu: " + e.getMessage());
+                System.err.println(e.getMessage());
             }
         });
         serverThread.setDaemon(true);
@@ -48,13 +48,11 @@ public class ChatService {
     }
 
     private void initializeServer() throws IOException {
-        System.out.println("Inicjalizacja serwera czatu na porcie: " + ClientStart.clientPort);
         this.selector = Selector.open();
         this.serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.bind(new InetSocketAddress(ClientStart.clientPort));
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-        System.out.println("Serwer czatu uruchomiony na porcie: " + ClientStart.clientPort);
     }
 
     private void runServerLoop() {
@@ -62,7 +60,6 @@ public class ChatService {
             try {
 
                 if (ClientStart.getServerService().getPlayerNumber(ClientStart.roomToken) != 2) {
-                    System.out.println("Przeciwnik opuścił pokój, oczekiwanie na nowego gracza...");
                     waitingForNewPlayer();
                     return;
                 }
@@ -100,7 +97,6 @@ public class ChatService {
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
         clientChannel.register(selector, SelectionKey.OP_READ);
-        System.out.println("Nowe połączenie zaakceptowane");
     }
 
     private void handleRead(SelectionKey key) throws IOException {
@@ -111,7 +107,6 @@ public class ChatService {
         if (bytesRead == -1) {
             clientChannel.close();
             key.cancel();
-            System.out.println("Połączenie zamknięte przez klienta");
         } else {
             buffer.flip();
             String message = new String(buffer.array(), 0, buffer.limit());
@@ -122,15 +117,12 @@ public class ChatService {
     }
 
     private void waitingForNewPlayer() {
-        System.out.println("Oczekiwanie na nowego gracza...");
-
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 if (ClientStart.getServerService().getPlayerNumber(ClientStart.roomToken) == 2) {
                     scheduler.shutdown();
                     getIpPortUsername();
-                    System.out.println("Znaleziono nowego gracza: " + oponentNick);
 
 
                     Platform.runLater(() -> startServer(messageCallback));
@@ -152,7 +144,6 @@ public class ChatService {
                 socketChannel.connect(new InetSocketAddress(oponentIp, oponentPort));
                 ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
                 socketChannel.write(buffer);
-                System.out.println("Wiadomość wysłana: " + message);
                 return;
             } catch (IOException e) {
                 System.err.println("Próba " + (attempt + 1) + " wysłania wiadomości nie powiodła się: " + e.getMessage());
@@ -189,7 +180,6 @@ public class ChatService {
                 oponentIp = newIp;
                 oponentPort = newPort;
                 oponentNick = newNick;
-                System.out.println("Zaktualizowano dane przeciwnika: " + oponentNick + " (" + oponentIp + ":" + oponentPort + ")");
             }
         } catch (Exception e) {
             System.err.println("Błąd podczas pobierania danych przeciwnika: " + e.getMessage());
@@ -198,7 +188,6 @@ public class ChatService {
     }
 
     public void stopServer() {
-        System.out.println("Zatrzymywanie serwera czatu...");
         running = false;
 
         if (selector != null) {
@@ -233,7 +222,6 @@ public class ChatService {
                 selector = null;
                 serverSocketChannel = null;
 
-                System.out.println("Serwer czatu zatrzymany");
             } catch (Exception e) {
                 System.err.println("Błąd podczas zamykania serwera: " + e.getMessage());
             }

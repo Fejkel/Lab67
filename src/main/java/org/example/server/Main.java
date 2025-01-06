@@ -13,6 +13,7 @@ public class Main {
     
     public static void main(String[] args) {
         try {
+            parseArgs(args);
 
             RoomService = new RoomService();
             Registry registry = LocateRegistry.createRegistry(port);
@@ -36,6 +37,31 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Server failed " + e.getMessage());
             Logger.log("Server failed: " + e.getMessage());
+        }
+    }
+
+    private static void parseArgs(String[] args) {
+        if (args.length > 0) {
+            if(args[0].equals("--help"))
+            {
+                System.out.println("""
+                    usage: <name_of_jar>.jar [port]
+                            [port]: port number on which server will be hosted, default is 10001
+                    """);
+                System.exit(0);
+            }else{
+                try{
+                    port = Integer.parseInt(args[0]);
+                    System.out.println("Port set to: " + port);
+                    Logger.log("Port set to: " + port);
+                    return;
+                }catch (NumberFormatException e){
+                    System.out.println("Port must be a number");
+                }
+            }
+        }else {
+            System.out.println("No port specified, using default port: " + port);
+            Logger.log("No port specified, using default port: " + port);
         }
     }
 }

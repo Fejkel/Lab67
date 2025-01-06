@@ -30,7 +30,7 @@ public class GameController {
     private VBox chatBox;
 
     @FXML
-    private ScrollPane chatscrollpanel;
+    private ScrollPane chatScrollPane;
 
     @FXML
     private TextArea messageInput;
@@ -60,7 +60,6 @@ public class GameController {
                 Stage stage = (Stage) gridPane.getScene().getWindow();
                 SceneController sceneController = new SceneController(stage);
                 sceneController.switchTo("RoomListView.fxml");
-                System.out.println("Gracz opuścił grę, serwer zamknięty.");
             }
             if (chatService != null) {
                 chatService.stopServer();
@@ -91,25 +90,25 @@ public class GameController {
         try {
             chatService = new ChatService();
             chatService.startServer(message -> Platform.runLater(() -> displayReceivedMessage(message)));
-            System.out.println("Serwer czatu uruchomiony.");
+
         } catch (Exception e) {
             System.err.println("Błąd podczas uruchamiania serwera czatu: " + e.getMessage());
         }
     }
     private void displayReceivedMessage(String message) {
-        Text receivedMessage = new Text("["+chatService.getOponentNick()+"]"+message);
-        receivedMessage.setStyle("-fx-fill: blue;");
+        Text receivedMessage = new Text("["+chatService.getOponentNick()+"] "+message);
+        receivedMessage.setStyle("-fx-fill: black;");
         chatBox.getChildren().add(receivedMessage);
 
-        Platform.runLater(() -> chatscrollpanel.setVvalue(1.0));
+        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
     }
 
     private void displaySentMessage(String username, String message) {
-        Text sentMessage = new Text("[" + username + "]: " + message);
+        Text sentMessage = new Text("[" + username + "] " + message);
         sentMessage.setStyle("-fx-fill: green;");
         chatBox.getChildren().add(sentMessage);
 
-        Platform.runLater(() -> chatscrollpanel.setVvalue(1.0));
+        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
     }
     @FXML
     private void sendMessage() {

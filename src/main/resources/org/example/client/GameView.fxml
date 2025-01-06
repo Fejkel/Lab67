@@ -12,7 +12,7 @@
 
 <?import javafx.scene.layout.VBox?>
 <AnchorPane prefHeight="595.0" prefWidth="915.0" style="-fx-background-color: grey;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.client.controllers.GameController">
-    <ScrollPane fx:id="chatscrollpanel" layoutX="609.0" layoutY="87.0" prefHeight="429.0" prefWidth="283.0">
+    <ScrollPane fx:id="chatScrollPane" layoutX="609.0" layoutY="87.0" prefHeight="429.0" prefWidth="283.0">
         <VBox fx:id="chatBox" spacing="5" />
     </ScrollPane>
       <Label layoutX="609.0" layoutY="47.0" text="Chat:">
