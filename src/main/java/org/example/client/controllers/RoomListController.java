@@ -8,7 +8,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.client.ClientStart;
-import org.example.client.SceneController;
 import org.example.client.ServerService;
 
 import java.rmi.RemoteException;
@@ -18,6 +17,8 @@ public class RoomListController {
 
     @FXML
     private VBox roomContainer;
+    @FXML
+    private VBox roomContainer1;
     @FXML
     private Label usernameLabel;
     @FXML
@@ -29,6 +30,7 @@ public class RoomListController {
     public void initialize() {
         this.serverService = ClientStart.getServerService();
         loadRooms();
+        loadStats();
         loadUsername();
     }
     @FXML
@@ -54,6 +56,7 @@ public class RoomListController {
         new Thread(task).start();
     }
 
+
     private String getRoomDisplayText(String token) {
         try {
             return token.split("/")[1] + " " + serverService.getPlayerNumber(token) + "/2";
@@ -71,12 +74,19 @@ public class RoomListController {
                 alert.show();
                 return;
             }
-            serverService.joinRoom(ClientStart.userToken, token);
-            ClientStart.setRoomToken(token);
 
-            Stage stage = (Stage) usernameLabel.getScene().getWindow();
-            SceneController sceneController = new SceneController(stage);
-            sceneController.switchTo("GameView.fxml");
+            if(serverService.joinRoom(ClientStart.userToken, token) == 1) {
+                ClientStart.setRoomToken(token);
+
+                Stage stage = (Stage) usernameLabel.getScene().getWindow();
+                SceneController sceneController = new SceneController(stage);
+                sceneController.switchTo("GameView.fxml");
+            }else{
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Room does not exist.");
+                alert.show();
+                loadRooms();
+            }
 
         } catch (Exception e) {
             System.out.println("Join room error: " + e.getMessage());
@@ -96,7 +106,6 @@ public class RoomListController {
                 alert.setContentText("Room name must be at least 3 characters long.");
                 alert.showAndWait();
             }else {
-                System.out.println("Creating room...");
                 serverService.createRoom(roomName.getText());
                 loadRooms();
             }
@@ -109,5 +118,27 @@ public class RoomListController {
     private void loadUsername()
     {
         usernameLabel.setText("Username: "+ClientStart.userName);
+    }
+
+    @FXML
+    private void loadStats() {
+        roomContainer1.getChildren().clear();
+        var task = serverService.loadStats();
+
+        task.setOnSucceeded(event -> {
+            ArrayList<String> playerStats = task.getValue();
+            for (String stat : playerStats) {
+                Label label = new Label(stat);
+                roomContainer1.getChildren().add(label);
+            }
+        });
+
+        task.setOnFailed(event -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Failed to load stats.");
+            alert.show();
+        });
+
+        new Thread(task).start();
     }
 }

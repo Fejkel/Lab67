@@ -10,8 +10,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.layout.VBox?>
 <AnchorPane prefHeight="595.0" prefWidth="915.0" style="-fx-background-color: grey;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.client.controllers.GameController">
-    <ScrollPane fx:id="chatscrollpanel" layoutX="609.0" layoutY="87.0" prefHeight="429.0" prefWidth="283.0" />
+    <ScrollPane fx:id="chatscrollpanel" layoutX="609.0" layoutY="87.0" prefHeight="429.0" prefWidth="283.0">
+        <VBox fx:id="chatBox" spacing="5" />
+    </ScrollPane>
       <Label layoutX="609.0" layoutY="47.0" text="Chat:">
          <font>
             <Font size="28.0" />
@@ -30,11 +33,11 @@
           <RowConstraints maxHeight="158.0" minHeight="10.0" prefHeight="156.0" vgrow="SOMETIMES" />
         </rowConstraints>
       </GridPane>
-      <Label fx:id="whosturn" alignment="CENTER" layoutX="55.0" layoutY="47.0" prefHeight="40.0" prefWidth="492.0" style="-fx-text-alignment: center;" text="Waiting for other player">
+      <Label fx:id="whosTurn" alignment="CENTER" layoutX="55.0" layoutY="47.0" prefHeight="40.0" prefWidth="492.0" style="-fx-text-alignment: center;" text="Waiting for other player">
          <font>
             <Font size="28.0" />
          </font>
       </Label>
-   <Button layoutX="814.0" layoutY="516.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="78.0" text="Send" />
-   <TextArea layoutX="609.0" layoutY="516.0" prefHeight="17.0" prefWidth="205.0" promptText="message" />
+   <Button onAction="#sendMessage" layoutX="814.0" layoutY="516.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="78.0" text="Send" />
+   <TextArea fx:id="messageInput" layoutX="609.0" layoutY="516.0" prefHeight="17.0" prefWidth="205.0" promptText="message" />
 </AnchorPane>

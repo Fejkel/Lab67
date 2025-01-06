@@ -24,24 +24,28 @@ public class Room {
             if (players.isEmpty()) {
                 players.put(playerToken, "X");
             } else {
-
-                String playerSymbol = players.containsValue("X") ? "O" : "X";
-                players.put(playerToken, playerSymbol);
-
+                if (!players.containsKey(playerToken))
+                {
+                    String playerSymbol = players.containsValue("X") ? "O" : "X";
+                    players.put(playerToken, playerSymbol);
+                    System.out.println("Gracz dołączył: " + playerToken);
+                }
 
                 playerVotesReset.clear();
-                Logger.log("Reset votes cleared because a new player joined room: " + token);
+                Logger.log("Player joined " + playerToken + " joined the "+ token + " room.");
             }
         }
     }
 
     protected synchronized void leaveRoom(String playerToken) {
-        players.remove(playerToken);
+        if (players.containsKey(playerToken)) {
+            players.remove(playerToken);
+            Logger.log("Player " + playerToken + " left the room. Room reset.");
+            System.out.println("Player " + playerToken + " left the room.");
+        }
         playerVotesReset.remove(playerToken);
         resetGame();
 
-        Logger.log("Player " + playerToken + " left the room. Room reset.");
-        System.out.println("Player " + playerToken + " left the room.");
     }
 
     protected boolean isYourTurn(String playerToken){
@@ -72,7 +76,7 @@ public class Room {
                 case 5 -> board[2] + board[5] + board[8];
                 case 6 -> board[0] + board[4] + board[8];
                 case 7 -> board[2] + board[4] + board[6];
-                default -> "draw";
+                default -> null;
             };
 
             switch (line) {
@@ -83,9 +87,6 @@ public class Room {
                         }
                     }
                 }
-                case "draw" -> {
-                    return "draw";
-                }
                 case "OOO" -> {
                     for (Map.Entry<String, String> entry : players.entrySet()) {
                         if (entry.getValue().equals("O")) {
@@ -93,6 +94,10 @@ public class Room {
                         }
                     }
                 }
+            }
+            if(isBoardFull())
+            {
+                return "draw";
             }
         }
         if(players.size() != 2){
@@ -114,20 +119,17 @@ public class Room {
         }
     }
     protected synchronized void resetRoom(String playerToken) {
-        if (!playerVotesReset.contains(playerToken) && players.containsKey(playerToken)) {
+        if (playerVotesReset == null) {
+            playerVotesReset = new ArrayList<>();
+        }
+
+        if (!playerVotesReset.contains(playerToken)) {
             playerVotesReset.add(playerToken);
-            Logger.log("Player " + playerToken + " voted for reset in room: " + token);
         }
 
-        playerVotesReset.removeIf(player -> !players.containsKey(player));
-
-        if (playerVotesReset.size() == players.size() && players.size() == 2) {
+        if (playerVotesReset.size() == players.size()) {
             resetGame();
-            Logger.log("Room reset: Both players voted reset.");
-        }
-        else if (players.size() < 2) {
-            resetGame();
-            Logger.log("Room reset: Opponent left the room.");
+            playerVotesReset.clear();
         }
     }
 
@@ -154,14 +156,29 @@ public class Room {
 
     protected int getPlayerNumber(){
         return this.players.size();
+
     }
 
-    protected String getOpponentToken(String playerToken){
-        for(String player : players.keySet()){
-            if(!player.equals(playerToken))
-                return player;
+    protected synchronized String getOpponentToken(String playerToken) {
+        if (players == null || players.isEmpty()) {
+            System.err.println("Lista graczy jest pusta.");
+            return null;
         }
-        return playerToken;
+
+        if (players.size() < 2) {
+            System.err.println("Nie ma wystarczającej liczby graczy w pokoju do znalezienia przeciwnika. Obecni gracze: " + players.keySet());
+            return null;
+        }
+
+        for (String token : players.keySet()) {
+            if (!token.equals(playerToken)) {
+                System.out.println("Przeciwnik znaleziony: " + token);
+                return token;
+            }
+        }
+
+        System.err.println("Nie znaleziono przeciwnika dla gracza: " + playerToken);
+        return null;
     }
 
     public String getToken() {

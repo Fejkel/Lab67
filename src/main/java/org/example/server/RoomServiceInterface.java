@@ -4,10 +4,12 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+
+
 public interface RoomServiceInterface extends Remote {
     void createRoom(String roomName) throws RemoteException;
     void deleteRoom(String roomToken) throws RemoteException;
-    void joinRoom(String playerToken, String roomToken) throws RemoteException;
+    int joinRoom(String playerToken, String roomToken) throws RemoteException;
     void leaveRoom(String playerToken, String roomToken) throws RemoteException;
     void resetRoom(String playerToken, String roomToken) throws RemoteException;
     boolean isYourTurn(String playerToken, String roomToken) throws RemoteException;
@@ -17,4 +19,12 @@ public interface RoomServiceInterface extends Remote {
     ArrayList<String> getRooms() throws RemoteException;
     int getPlayerNumber(String roomToken) throws RemoteException;
     String[] getBoard(String roomToken) throws RemoteException;
+    ArrayList<String> getPlayerStats() throws RemoteException;
+    void updatePlayerStats(String playerToken, boolean isWin, boolean isDraw) throws RemoteException;
+    boolean isWin(String playerToken, String roomToken) throws RemoteException;
+    boolean isDraw(String roomToken) throws RemoteException;
+    //Bloker TCP
+    void registerClient(String username, String ipAddress, int port) throws RemoteException;
+    void unregisterClient(String username) throws RemoteException;
+
 }

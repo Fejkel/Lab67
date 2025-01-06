@@ -6,7 +6,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.client.ClientStart;
-import org.example.client.SceneController;
 
 import java.util.UUID;
 
@@ -30,6 +29,8 @@ public class ClientLoginController {
             String username = usernameField.getText();
             ClientStart.setUserToken(UUID.randomUUID() + "@" + username);
             ClientStart.setUserName(username);
+            String localIP = java.net.InetAddress.getLocalHost().getHostAddress();
+            ClientStart.roomService.registerClient(ClientStart.userToken,localIP,ClientStart.clientPort);
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
             SceneController sceneController = new SceneController(stage);
